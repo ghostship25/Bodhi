@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-type-sage: #3f6b56;
+  --color-type-sea: #3d5e73;
+  --color-type-wine: #7a4552;
+  --color-type-stone: #6b645c;
+  --color-type-moss: #4e6840;
+  --color-type-bark: #6a5344;
+  --shadow-panel: 0 18px 50px rgb(28 25 22 / 0.1);
+}
+
+:root {
+  --paper: #f4f1ea;
+  --paper-2: #ebe6dc;
+  --ink: #1c1916;
+  --ink-soft: #5e584f;
+  --ink-faint: #8a8378;
+  --line: #e3dcd2;
+  --accent: #2f4a3c;
+  --accent-fg: #f4f1ea;
+  color-scheme: light;
+  --motion-fast: 250ms;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark {
+  --paper: #12110f;
+  --paper-2: #1c1a17;
+  --ink: #f3efe7;
+  --ink-soft: #b7b0a6;
+  --ink-faint: #8c857b;
+  --line: #2e2a26;
+  --accent: #d5e3da;
+  --accent-fg: #14211b;
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 28%, transparent);
+  }
+}
+
+.pb-nav {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-fab {
+  bottom: calc(5.25rem + env(safe-area-inset-bottom));
+}
+
+.capture-panel {
+  position: fixed;
+  left: 50%;
+  width: min(32rem, calc(100vw - 1.5rem));
+  transform: translateX(-50%);
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .capture-panel {
+    top: 14vh;
+    bottom: auto;
+  }
+}
+
+.graph-page {
+  min-height: calc(100dvh - 7rem);
+}
+
+.graph-stage {
+  min-height: 24rem;
+}
+
+.rise {
+  animation: rise var(--motion-fast) var(--ease-smooth-out);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+}
