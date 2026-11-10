@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Bodhi is a calm, object-based notebook for your notes, people, projects, and ideas.">
+    <meta name="theme-color" content="#f5f3ed">
+    <title>Bodhi — a little more room to think</title>
+    <style>
+      :root { color-scheme: light; font-family: system-ui, sans-serif; color: #23332b; background: #f5f3ed; }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      a { color: inherit; }
+      .wrap { max-width: 1100px; margin: auto; padding: 0 28px; }
+      header { display: flex; justify-content: space-between; align-items: center; padding-top: 30px; }
+      .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 750; letter-spacing: -.04em; font-size: 23px; }
+      .mark { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; color: #fff; background: #42634d; font-size: 18px; }
+      header > a:last-child { color: #516158; font-size: 14px; text-decoration: none; }
+      main { padding: 105px 0 95px; }
+      .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 65px; align-items: center; }
+      .eyebrow { color: #63826d; text-transform: uppercase; letter-spacing: .15em; font-size: 11px; font-weight: 750; }
+      h1 { font-family: Georgia, serif; font-weight: 400; font-size: clamp(48px, 6.5vw, 75px); letter-spacing: -.055em; line-height: 1.04; margin: 22px 0; }
+      .intro { max-width: 440px; color: #617067; line-height: 1.75; font-size: 17px; }
+      .actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 31px; }
+      .button { display: inline-block; padding: 13px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 650; }
+      .primary { color: white; background: #42634d; }
+      .secondary { border: 1px solid #d5dcd3; }
+      .preview { border: 1px solid #dfe4dc; border-radius: 16px; background: #fffefa; box-shadow: 0 24px 70px #273c2c14; overflow: hidden; }
+      .preview-top { padding: 16px 21px; border-bottom: 1px solid #ecefe9; color: #8d9990; font-size: 12px; }
+      .preview-body { padding: 34px; }
+      .preview-label { color: #98a69a; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+      .preview h2 { font-family: Georgia, serif; font-weight: 400; font-size: 28px; margin: 12px 0; }
+      .preview p { color: #718077; line-height: 1.7; font-size: 14px; }
+      .link { color: #527861; background: #edf4ed; padding: 2px 5px; border-radius: 4px; white-space: nowrap; }
+      .preview-list { margin-top: 28px; border-top: 1px solid #edf0ea; padding-top: 18px; }
+      .preview-list div { padding: 8px 0; color: #617067; font-size: 13px; }
+      .preview-list span { color: #9bab9d; margin-right: 10px; }
+      .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin-top: 110px; }
+      .features h2 { font-size: 15px; margin: 0 0 10px; }
+      .features p { color: #718077; line-height: 1.7; font-size: 14px; margin: 0; }
+      footer { border-top: 1px solid #dfe4dc; padding: 24px 0 32px; color: #78877c; font-size: 13px; }
+      footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+      @media (max-width: 720px) { main { padding: 70px 0; } .hero, .features { grid-template-columns: 1fr; } .hero { gap: 42px; } .features { margin-top: 70px; gap: 24px; } }
+    </style>
+  </head>
+  <body>
+    <header class="wrap">
+      <a class="brand" href="./"><span class="mark" aria-hidden="true">b</span> bodhi</a>
+      <a href="https://github.com/ghostship25/Bodhi">GitHub &rarr;</a>
+    </header>
+    <main class="wrap">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">A calm space for your thoughts</div>
+          <h1>A little more room to think.</h1>
+          <p class="intro">Bodhi is an object-based notebook for the things you want to remember and the connections you want to make.</p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/ghostship25/Bodhi#run-it-on-windows-macos-or-linux">Get started &rarr;</a>
+            <a class="button secondary" href="https://github.com/ghostship25/Bodhi">View on GitHub</a>
+          </div>
+        </div>
+        <div class="preview" aria-label="Illustration of connected notes">
+          <div class="preview-top">bodhi &nbsp; / &nbsp; your space</div>
+          <div class="preview-body">
+            <div class="preview-label">A note</div>
+            <h2>Ideas grow together.</h2>
+            <p>Keep a thought, link it to a <span class="link">[[project]]</span>, and find your way back when you need it.</p>
+            <div class="preview-list">
+              <div><span>&#9675;</span> Notes and ideas</div>
+              <div><span>&#9675;</span> People and projects</div>
+              <div><span>&#9675;</span> Daily pages</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="features" aria-label="Features">
+        <div><h2>Make connections</h2><p>Link objects with double brackets and let related ideas find each other.</p></div>
+        <div><h2>Make it yours</h2><p>Keep your library in your browser, or use an account on a running Bodhi server.</p></div>
+        <div><h2>Open by design</h2><p>Run it yourself, explore the code, and build on it under the MIT license.</p></div>
+      </section>
+    </main>
+    <footer><div class="wrap"><span>Bodhi &middot; a calm, object-based notebook</span><a href="https://github.com/ghostship25/Bodhi/blob/main/LICENSE">MIT License</a></div></footer>
+  </body>
+</html>

@@ -33,7 +33,7 @@ Sign-in is email and password, Google, or X.
 
 ## GitHub Pages
 
-GitHub Pages only serves files. It cannot run Bodhi's account server, so a Pages site cannot sign people in by itself.
+The [Bodhi landing page](https://ghostship25.github.io/Bodhi/) is hosted on GitHub Pages. It introduces the project; it is not the application. GitHub Pages only serves files and cannot run Bodhi's account server, so it cannot sign people in by itself.
 
 Use one of these:
 
@@ -48,3 +48,7 @@ Use one of these:
 | `npm run dev` | Start Bodhi for local use |
 | `npm run build` | Production build and database migrations |
 | `npm run typecheck` | Typecheck |
+
+## License
+
+[MIT](LICENSE)
