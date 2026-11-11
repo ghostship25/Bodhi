@@ -15,6 +15,7 @@ import { Route as GraphRouteImport } from './routes/graph'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ObjectsRouteImport } from './routes/objects'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as TrashRouteImport } from './routes/trash'
 import { Route as OObjectIdRouteImport } from './routes/o.$objectId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -48,6 +49,11 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrashRoute = TrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OObjectIdRoute = OObjectIdRouteImport.update({
   id: '/o/$objectId',
   path: '/o/$objectId',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/objects': typeof ObjectsRoute
   '/search': typeof SearchRoute
+  '/trash': typeof TrashRoute
   '/o/$objectId': typeof OObjectIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/objects': typeof ObjectsRoute
   '/search': typeof SearchRoute
+  '/trash': typeof TrashRoute
   '/o/$objectId': typeof OObjectIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/objects': typeof ObjectsRoute
   '/search': typeof SearchRoute
+  '/trash': typeof TrashRoute
   '/o/$objectId': typeof OObjectIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/objects'
     | '/search'
+    | '/trash'
     | '/o/$objectId'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/objects'
     | '/search'
+    | '/trash'
     | '/o/$objectId'
     | '/api/auth/$'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/objects'
     | '/search'
+    | '/trash'
     | '/o/$objectId'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ObjectsRoute: typeof ObjectsRoute
   SearchRoute: typeof SearchRoute
+  TrashRoute: typeof TrashRoute
   OObjectIdRoute: typeof OObjectIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trash': {
+      id: '/trash'
+      path: '/trash'
+      fullPath: '/trash'
+      preLoaderRoute: typeof TrashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/o/$objectId': {
       id: '/o/$objectId'
       path: '/o/$objectId'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ObjectsRoute: ObjectsRoute,
   SearchRoute: SearchRoute,
+  TrashRoute: TrashRoute,
   OObjectIdRoute: OObjectIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

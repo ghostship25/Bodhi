@@ -1,6 +1,8 @@
 # Bodhi
 
-A calm, object-based notebook. Notes, people, projects, and daily pages are all objects. Link them with `[[double brackets]]`. Use it with or without an account.
+A calm, object-based notebook. Notes, people, projects, and daily pages are all objects. Link them with `[[double brackets]]`. Use it on this device only, or sign in with email so the same library opens anywhere.
+
+Today holds the daily note, a week strip, open tasks, due dates, meetings, and checkbox lines written inside any note (`- [ ]`). Objects can be pinned, duplicated, moved between types, archived, or restored from Trash. Ask your notes after you sign in.
 
 ## Run it on Windows, macOS, or Linux
 

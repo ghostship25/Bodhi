@@ -17,6 +17,8 @@ export function ObjectView({ objectId }: { objectId: string }) {
   const disconnect = useBodhi((state) => state.disconnect);
   const addProperty = useBodhi((state) => state.addProperty);
   const setTemplate = useBodhi((state) => state.setTemplate);
+  const duplicateObject = useBodhi((state) => state.duplicateObject);
+  const moveType = useBodhi((state) => state.moveType);
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState(false);
   const [connectQuery, setConnectQuery] = useState("");
@@ -245,6 +247,37 @@ export function ObjectView({ objectId }: { objectId: string }) {
           <button type="button" className="rounded-full border border-line px-4 py-2 text-sm" onClick={() => setTemplate(type.id, object.body)}>
             Use writing as template
           </button>
+        )}
+        {type.id !== TYPE_IDS.daily && (
+          <button
+            type="button"
+            className="rounded-full border border-line px-4 py-2 text-sm"
+            onClick={() => {
+              const copyId = duplicateObject(object.id);
+              void navigate({ to: "/o/$objectId", params: { objectId: copyId } });
+            }}
+          >
+            Duplicate
+          </button>
+        )}
+        {type.id !== TYPE_IDS.daily && (
+          <label className="flex items-center gap-2 rounded-full border border-line px-3 py-2 text-sm">
+            Type
+            <select
+              value={type.id}
+              aria-label="Object type"
+              className="bg-transparent outline-none"
+              onChange={(event) => moveType(object.id, event.target.value)}
+            >
+              {library.types
+                .filter((item) => item.id !== TYPE_IDS.daily)
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+            </select>
+          </label>
         )}
         {object.inbox && (
           <button

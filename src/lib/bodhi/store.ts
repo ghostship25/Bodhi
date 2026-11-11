@@ -3,7 +3,7 @@ import type { BodhiLink, BodhiObject, Library, ObjectType, PropDef, PropKind, Pr
 import { GUEST } from "@/lib/bodhi/types";
 import { dayStamp, emptyLibrary, parseDay, systemTypes } from "@/lib/bodhi/system";
 import { reconcileMentions, rewriteTitle } from "@/lib/bodhi/mentions";
-import { mergeLibraries, normalizeLibrary } from "@/lib/bodhi/merge";
+import { mergeLibraries, normalizeLibrary, adoptSystem } from "@/lib/bodhi/merge";
 import { loadLibrary, loadMeta, saveLibrary, saveMeta } from "@/lib/bodhi/persist";
 import { seedLibrary } from "@/lib/bodhi/seed";
 import { pullLibrary, pushLibrary } from "@/lib/bodhi/sync-fns";
@@ -37,6 +37,12 @@ type Store = {
   updateObject: (id: string, patch: Partial<Pick<BodhiObject, "title" | "body" | "inbox" | "archived" | "pinned" | "props">>) => void;
   setProp: (id: string, key: string, value: PropValue) => void;
   deleteObject: (id: string) => void;
+  restoreObject: (id: string) => void;
+  purgeObject: (id: string) => void;
+  duplicateObject: (id: string) => string;
+  moveType: (id: string, typeId: string) => void;
+  toggleCheck: (id: string, line: number) => void;
+  fileInbox: () => void;
   connect: (fromId: string, toId: string) => void;
   disconnect: (linkId: string) => void;
   ensureDaily: (day: string) => string;
@@ -50,6 +56,33 @@ const STARTER = seedLibrary();
 
 let bootPromise: Promise<void> | null = null;
 let pushTimer: number | undefined;
+let saveTimer: number | undefined;
+let pendingSave: { active: string; library: Library } | null = null;
+
+function persist(library: Library, active: string) {
+  pendingSave = { library, active };
+  if (saveTimer) window.clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(() => {
+    const job = pendingSave;
+    pendingSave = null;
+    if (job) void saveLibrary(job.active, job.library);
+  }, 400);
+}
+
+function flushPersist() {
+  if (saveTimer) window.clearTimeout(saveTimer);
+  saveTimer = undefined;
+  const job = pendingSave;
+  pendingSave = null;
+  if (job) void saveLibrary(job.active, job.library);
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", flushPersist);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushPersist();
+  });
+}
 
 function claimToday(library: Library, today: string): Library {
   const stamp = nowIso();
@@ -86,7 +119,7 @@ function prettyDay(day: string): string {
 }
 
 export const useBodhi = create<Store>((set, get) => {
-  async function persist(library: Library, active = get().active) {
+  async function persistNow(library: Library, active = get().active) {
     await saveLibrary(active, library);
   }
 
@@ -95,7 +128,7 @@ export const useBodhi = create<Store>((set, get) => {
     let next = recipe(current);
     if (touch) next = { ...next, updatedAt: nowIso() };
     set({ library: next });
-    void persist(next);
+    persist(next, get().active);
     if (get().syncUsers.includes(get().active)) schedulePush();
   }
 
@@ -117,9 +150,9 @@ export const useBodhi = create<Store>((set, get) => {
         data: { library, baseUpdatedAt: get().baseUpdatedAt },
       });
       if (result.conflict) {
-        const merged = mergeLibraries(get().library, result.snapshot);
+        const merged = adoptSystem(mergeLibraries(get().library, result.snapshot));
         set({ library: merged, baseUpdatedAt: result.snapshot.updatedAt });
-        await persist(merged, active);
+        await persistNow(merged, active);
         pushing = false;
         if (attempt < 2) await flushPush(attempt + 1);
         return;
@@ -144,14 +177,14 @@ export const useBodhi = create<Store>((set, get) => {
         set({ syncStatus: "synced" });
         return;
       }
-      const merged = mergeLibraries(get().library, remote);
+      const merged = adoptSystem(mergeLibraries(get().library, remote));
       const changed = JSON.stringify(merged) !== JSON.stringify(get().library);
       set({
         library: merged,
         baseUpdatedAt: remote.updatedAt,
         syncStatus: changed ? "syncing" : "synced",
       });
-      await persist(merged, userId);
+      await persistNow(merged, userId);
       if (changed) schedulePush();
       else set({ syncStatus: "synced" });
     } catch {
@@ -181,8 +214,9 @@ export const useBodhi = create<Store>((set, get) => {
         const saved = await loadLibrary(meta.active);
         if (saved) {
           const current = get().library;
-          const library =
+          const loaded =
             current.updatedAt === STARTER.updatedAt ? saved : mergeLibraries(saved, current);
+          const library = adoptSystem(loaded);
           if (!meta.initialized) {
             meta.initialized = true;
             await saveMeta(meta);
@@ -198,7 +232,7 @@ export const useBodhi = create<Store>((set, get) => {
           await saveLibrary(meta.active, library);
           return;
         }
-        const library = claimToday(get().library, dayStamp());
+        const library = adoptSystem(claimToday(get().library, dayStamp()));
         meta.initialized = true;
         meta.active = meta.active || GUEST;
         await saveMeta(meta);
@@ -253,7 +287,7 @@ export const useBodhi = create<Store>((set, get) => {
       try {
         const remote = await pullLibrary();
         const local = get().library;
-        const merged = remote ? mergeLibraries(local, remote) : local;
+        const merged = adoptSystem(remote ? mergeLibraries(local, remote) : local);
         const stamped = { ...merged, updatedAt: nowIso() };
         const meta = await loadMeta();
         meta.syncUsers = Array.from(new Set([...meta.syncUsers, userId]));
@@ -418,6 +452,87 @@ export const useBodhi = create<Store>((set, get) => {
           link.fromId === id || link.toId === id
             ? { ...link, deletedAt: stamp, updatedAt: stamp }
             : link,
+        ),
+      }));
+    },
+    restoreObject: (id) => {
+      const stamp = nowIso();
+      commit((library) => {
+        const objects = library.objects.map((object) =>
+          object.id === id ? { ...object, deletedAt: null, updatedAt: stamp } : object,
+        );
+        const restored = objects.find((object) => object.id === id);
+        const links = restored
+          ? reconcileMentions(objects, library.links, id, restored.body, stamp)
+          : library.links;
+        return { ...library, objects, links };
+      });
+    },
+    purgeObject: (id) => {
+      commit((library) => ({
+        ...library,
+        objects: library.objects.filter((object) => object.id !== id),
+        links: library.links.filter((link) => link.fromId !== id && link.toId !== id),
+      }));
+    },
+    duplicateObject: (id) => {
+      const source = get().library.objects.find((object) => object.id === id);
+      if (!source || source.day) return id;
+      const copyId = uid();
+      const stamp = nowIso();
+      commit((library) => {
+        const current = library.objects.find((object) => object.id === id);
+        if (!current) return library;
+        const copy: BodhiObject = {
+          ...current,
+          id: copyId,
+          title: `${current.title} copy`,
+          day: null,
+          inbox: false,
+          pinned: false,
+          deletedAt: null,
+          props: { ...current.props },
+          createdAt: stamp,
+          updatedAt: stamp,
+        };
+        const objects = [...library.objects, copy];
+        const links = reconcileMentions(objects, library.links, copyId, copy.body, stamp);
+        return { ...library, objects, links };
+      });
+      return copyId;
+    },
+    moveType: (id, typeId) => {
+      if (typeId === "type_daily") return;
+      const stamp = nowIso();
+      commit((library) => ({
+        ...library,
+        objects: library.objects.map((object) =>
+          object.id === id && !object.day ? { ...object, typeId, updatedAt: stamp } : object,
+        ),
+      }));
+    },
+    toggleCheck: (id, line) => {
+      const stamp = nowIso();
+      commit((library) => {
+        const current = library.objects.find((object) => object.id === id);
+        if (!current) return library;
+        const lines = current.body.split("\n");
+        const text = lines[line];
+        if (!text || !text.startsWith("- [ ]")) return library;
+        lines[line] = text.replace("- [ ]", "- [x]");
+        const body = lines.join("\n");
+        const objects = library.objects.map((object) =>
+          object.id === id ? { ...object, body, updatedAt: stamp } : object,
+        );
+        return { ...library, objects, links: reconcileMentions(objects, library.links, id, body, stamp) };
+      });
+    },
+    fileInbox: () => {
+      const stamp = nowIso();
+      commit((library) => ({
+        ...library,
+        objects: library.objects.map((object) =>
+          object.inbox ? { ...object, inbox: false, updatedAt: stamp } : object,
         ),
       }));
     },

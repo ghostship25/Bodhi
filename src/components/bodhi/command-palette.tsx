@@ -58,6 +58,7 @@ export function CommandPalette() {
                 </PaletteItem>
                 <PaletteItem onSelect={() => go("/graph")}>Graph</PaletteItem>
                 <PaletteItem onSelect={() => go("/ask")}>Ask notes</PaletteItem>
+                <PaletteItem onSelect={() => go("/trash")}>Trash</PaletteItem>
                 <PaletteItem onSelect={() => go("/objects")}>All objects</PaletteItem>
                 <PaletteItem onSelect={() => go("/login")}>Account</PaletteItem>
                 <PaletteItem

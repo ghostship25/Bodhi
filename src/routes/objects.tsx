@@ -21,6 +21,7 @@ function ObjectsPage() {
   const library = useBodhi((state) => state.library);
   const createObject = useBodhi((state) => state.createObject);
   const createType = useBodhi((state) => state.createType);
+  const fileInbox = useBodhi((state) => state.fileInbox);
   const [title, setTitle] = useState("");
   const [typeName, setTypeName] = useState("");
   const [icon, setIcon] = useState("box");
@@ -104,6 +105,12 @@ function ObjectsPage() {
             )}
           </select>
         </label>
+      )}
+
+      {typeKey === "inbox" && objects.length > 0 && (
+        <button type="button" className="mt-4 text-sm text-ink" onClick={() => fileInbox()}>
+          File everything in the inbox
+        </button>
       )}
 
       {showType && (

@@ -100,7 +100,10 @@ export function systemTypes(): ObjectType[] {
       icon: "check",
       color: "bark",
       isSystem: true,
-      properties: [{ id: "done", name: "Done", kind: "checkbox" }],
+      properties: [
+        { id: "done", name: "Done", kind: "checkbox" },
+        { id: "due", name: "Due", kind: "date" },
+      ],
       updatedAt: EPOCH,
     },
     {

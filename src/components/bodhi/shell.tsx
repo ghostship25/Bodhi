@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { MessageSquare, Moon, Plus, Search, Sun, Waypoints } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { useBodhi, visibleObjects } from "@/lib/bodhi/store";
+import { useBodhi } from "@/lib/bodhi/store";
 import { TYPE_IDS } from "@/lib/bodhi/types";
 import { CommandPalette } from "@/components/bodhi/command-palette";
 import { TYPE_DOT, TypeIcon } from "@/components/bodhi/icons";
@@ -25,7 +25,20 @@ export function AppShell() {
   const init = useBodhi((state) => state.init);
   const onSession = useBodhi((state) => state.onSession);
   const ready = useBodhi((state) => state.ready);
-  const library = useBodhi((state) => state.library);
+  const inbox = useBodhi(
+    (state) => state.library.objects.reduce((count, object) => count + (!object.deletedAt && !object.archived && object.inbox ? 1 : 0), 0),
+  );
+  const trash = useBodhi((state) => state.library.objects.reduce((count, object) => count + (object.deletedAt ? 1 : 0), 0));
+  const pinKey = useBodhi((state) =>
+    JSON.stringify(
+      state.library.objects
+        .filter((object) => !object.deletedAt && !object.archived && object.pinned)
+        .slice(0, 6)
+        .map((object) => ({ id: object.id, title: object.title })),
+    ),
+  );
+  const pins = JSON.parse(pinKey) as { id: string; title: string }[];
+  const types = useBodhi((state) => state.library.types);
   const setCapture = useBodhi((state) => state.setCaptureOpen);
   const setPalette = useBodhi((state) => state.setPaletteOpen);
   const syncStatus = useBodhi((state) => state.syncStatus);
@@ -85,10 +98,6 @@ export function AppShell() {
     return () => window.removeEventListener("keydown", onKey);
   }, [setCapture, setPalette]);
 
-  const inbox = visibleObjects(library).filter((object) => object.inbox).length;
-  const pins = visibleObjects(library).filter((object) => object.pinned).slice(0, 6);
-  const types = library.types.filter((type) => type.id !== TYPE_IDS.daily);
-
   return (
     <div className="flex h-dvh bg-paper text-ink">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-paper-2 md:flex">
@@ -124,7 +133,9 @@ export function AppShell() {
             </Link>
           ))}
           <div className="mt-4 px-2 text-xs font-medium tracking-wide text-ink-faint">Types</div>
-          {types.map((type) => (
+          {types
+            .filter((type) => type.id !== TYPE_IDS.daily)
+            .map((type) => (
             <NavLink key={type.id} to="/objects" search={{ type: type.key }} active={false}>
               <span className={cn("size-2 rounded-full", TYPE_DOT[type.color])} />
               {type.plural}
@@ -137,6 +148,11 @@ export function AppShell() {
           <NavLink to="/ask" active={pathname === "/ask"}>
             <MessageSquare className="size-4" />
             Ask notes
+          </NavLink>
+          <NavLink to="/trash" active={pathname === "/trash"}>
+            <TypeIcon name="box" className="size-4" />
+            Trash
+            {trash > 0 && <span className="ml-auto text-xs tabular-nums text-ink-soft">{trash}</span>}
           </NavLink>
         </nav>
         <div className="space-y-2 border-t border-line p-3">

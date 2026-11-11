@@ -34,7 +34,9 @@ export function seedLibrary(now = "2026-01-01T00:00:00.000Z", day = "pending"): 
   const dailyBody = `This page is today. Write what you want to remember, and connect it with double brackets.
 
 [[How Bodhi works]]
-[[Quick capture]]`;
+[[Quick capture]]
+
+- [ ] Read how Bodhi works`;
 
   const objects: BodhiObject[] = [
     object("obj_daily_today", TYPE_IDS.daily, dailyTitle, dailyBody, now, { day: today }),
