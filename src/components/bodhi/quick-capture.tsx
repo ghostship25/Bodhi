@@ -57,10 +57,8 @@ export function QuickCapture() {
           className="capture-panel z-50 rounded-3xl border border-line bg-paper p-4 shadow-panel outline-none"
           aria-describedby={undefined}
         >
-          <Dialog.Title className="font-serif text-xl text-ink">Quick capture</Dialog.Title>
-          <Dialog.Description className="mt-1 text-sm text-ink-soft">
-            A title is enough. You can file it later.
-          </Dialog.Description>
+          <Dialog.Title className="font-serif text-2xl text-ink">Capture</Dialog.Title>
+          <Dialog.Description className="sr-only">A title is enough. You can file it later.</Dialog.Description>
           <input
             autoFocus
             value={title}

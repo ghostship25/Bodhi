@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { MessageSquare, Moon, Plus, Search, Sun, Waypoints } from "lucide-react";
+import { MessageSquare, Moon, Plus, Search, Sun, Trash2, Waypoints } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useBodhi } from "@/lib/bodhi/store";
 import { TYPE_IDS } from "@/lib/bodhi/types";
@@ -101,13 +101,31 @@ export function AppShell() {
   return (
     <div className="flex h-dvh bg-paper text-ink">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-paper-2 md:flex">
-        <div className="px-4 py-5">
+        <div className="flex items-center justify-between px-4 py-4">
           <Link to="/" className="font-serif text-2xl tracking-tight">
             Bodhi
           </Link>
-          <p className="mt-1 text-sm text-ink-soft">A calm home for everything you know.</p>
+          <button
+            type="button"
+            aria-label="Toggle color theme"
+            onClick={() => applyTheme(currentTheme() === "dark" ? "light" : "dark")}
+            className="grid size-9 place-items-center rounded-full text-ink-soft hover:bg-paper"
+          >
+            <Sun className="size-4 dark:hidden" />
+            <Moon className="hidden size-4 dark:block" />
+          </button>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3">
+        <div className="px-3 pb-2">
+          <button
+            type="button"
+            onClick={() => setPalette(true)}
+            className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-ink-soft hover:bg-paper hover:text-ink"
+          >
+            <Search className="size-4" />
+            Search
+          </button>
+        </div>
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3">
           <NavLink to="/" active={pathname === "/"}>
             <TypeIcon name="calendar" className="size-4" />
             Today
@@ -115,13 +133,9 @@ export function AppShell() {
           <NavLink to="/objects" search={{ type: "inbox" }} active={false}>
             <TypeIcon name="box" className="size-4" />
             Inbox
-            {inbox > 0 && <span className="ml-auto text-xs tabular-nums text-ink-soft">{inbox}</span>}
+            {inbox > 0 && <span className="ml-auto text-xs tabular-nums text-ink-faint">{inbox}</span>}
           </NavLink>
-          <NavLink to="/objects" search={{ type: "task" }} active={false}>
-            <TypeIcon name="check" className="size-4" />
-            Open tasks
-          </NavLink>
-          {pins.length > 0 && <div className="mt-4 px-2 text-xs font-medium tracking-wide text-ink-faint">Pinned</div>}
+          {pins.length > 0 && <div className="mt-5 px-2 text-xs text-ink-faint">Pinned</div>}
           {pins.map((object) => (
             <Link
               key={object.id}
@@ -132,28 +146,31 @@ export function AppShell() {
               {object.title}
             </Link>
           ))}
-          <div className="mt-4 px-2 text-xs font-medium tracking-wide text-ink-faint">Types</div>
+          <div className="mt-5 px-2 text-xs text-ink-faint">Library</div>
           {types
             .filter((type) => type.id !== TYPE_IDS.daily)
             .map((type) => (
-            <NavLink key={type.id} to="/objects" search={{ type: type.key }} active={false}>
-              <span className={cn("size-2 rounded-full", TYPE_DOT[type.color])} />
-              {type.plural}
-            </NavLink>
-          ))}
+              <NavLink key={type.id} to="/objects" search={{ type: type.key }} active={false}>
+                <span className={cn("size-2 rounded-full", TYPE_DOT[type.color])} />
+                {type.plural}
+              </NavLink>
+            ))}
+          <div className="mt-auto" />
           <NavLink to="/graph" active={pathname === "/graph"}>
             <Waypoints className="size-4" />
             Graph
           </NavLink>
           <NavLink to="/ask" active={pathname === "/ask"}>
             <MessageSquare className="size-4" />
-            Ask notes
+            Ask
           </NavLink>
-          <NavLink to="/trash" active={pathname === "/trash"}>
-            <TypeIcon name="box" className="size-4" />
-            Trash
-            {trash > 0 && <span className="ml-auto text-xs tabular-nums text-ink-soft">{trash}</span>}
-          </NavLink>
+          {trash > 0 && (
+            <NavLink to="/trash" active={pathname === "/trash"}>
+              <Trash2 className="size-4" />
+              Trash
+              <span className="ml-auto text-xs tabular-nums text-ink-faint">{trash}</span>
+            </NavLink>
+          )}
         </nav>
         <div className="space-y-2 border-t border-line p-3">
           <button
@@ -164,26 +181,15 @@ export function AppShell() {
             <Plus className="size-4" />
             Capture
           </button>
-          <div className="flex items-center justify-between gap-2 px-1">
-            <Link to="/login" className="min-w-0 truncate text-sm text-ink-soft">
-              {!mounted || isPending
-                ? "Account"
-                : user
-                  ? syncStatus === "local" || active === "guest"
-                    ? "On this device"
-                    : "Synced"
-                  : "Use without account"}
-            </Link>
-            <button
-              type="button"
-              aria-label="Toggle color theme"
-              onClick={() => applyTheme(currentTheme() === "dark" ? "light" : "dark")}
-              className="grid size-9 place-items-center rounded-full text-ink-soft hover:bg-paper"
-            >
-              <Sun className="size-4 dark:hidden" />
-              <Moon className="hidden size-4 dark:block" />
-            </button>
-          </div>
+          <Link to="/login" className="block truncate px-1 text-sm text-ink-soft">
+            {!mounted || isPending
+              ? "Account"
+              : user
+                ? syncStatus === "local" || active === "guest"
+                  ? "On this device"
+                  : "Synced"
+                : "No account"}
+          </Link>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -211,7 +217,7 @@ export function AppShell() {
             </button>
           </div>
         </header>
-        <main className="pb-nav flex-1 overflow-y-auto md:pb-20">
+        <main className="pb-nav flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>
@@ -241,15 +247,6 @@ export function AppShell() {
       </button>
       <QuickCapture />
       <CommandPalette />
-      <button
-        type="button"
-        onClick={() => setPalette(true)}
-        className="fixed bottom-5 right-5 hidden items-center gap-2 rounded-full border border-line bg-paper-2 px-3 py-2 text-sm text-ink-soft shadow-panel md:flex"
-      >
-        <Search className="size-4" />
-        Search
-        <span className="rounded-md bg-paper px-1.5 py-0.5 text-xs text-ink-faint">Ctrl K</span>
-      </button>
     </div>
   );
 }

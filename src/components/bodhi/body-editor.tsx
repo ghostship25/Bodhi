@@ -6,9 +6,10 @@ type Props = {
   onChange: (value: string) => void;
   objects: BodhiObject[];
   label?: string;
+  bare?: boolean;
 };
 
-export function BodyEditor({ value, onChange, objects, label = "Writing" }: Props) {
+export function BodyEditor({ value, onChange, objects, label = "Writing", bare = false }: Props) {
   const [query, setQuery] = useState<string | null>(null);
   const [caret, setCaret] = useState(0);
 
@@ -38,7 +39,7 @@ export function BodyEditor({ value, onChange, objects, label = "Writing" }: Prop
 
   return (
     <div className="relative">
-      <label className="mb-2 block text-sm font-medium text-ink-soft" htmlFor="bodhi-body">
+      <label className={bare ? "sr-only" : "mb-2 block text-sm font-medium text-ink-soft"} htmlFor="bodhi-body">
         {label}
       </label>
       <textarea
@@ -53,8 +54,8 @@ export function BodyEditor({ value, onChange, objects, label = "Writing" }: Prop
         onBlur={() => {
           window.setTimeout(() => setQuery(null), 160);
         }}
-        placeholder="Write here. Link anything with [[double brackets]]."
-        className="min-h-64 w-full resize-y bg-transparent font-serif text-lg leading-relaxed text-ink outline-none placeholder:text-ink-faint"
+        placeholder="Write."
+        className="min-h-72 w-full resize-y bg-transparent font-serif text-lg leading-relaxed text-ink outline-none placeholder:text-ink-faint"
       />
       {query !== null && matches.length > 0 && (
         <ul className="absolute left-0 top-full z-20 mt-1 w-full max-w-md overflow-hidden rounded-2xl border border-line bg-paper shadow-panel">

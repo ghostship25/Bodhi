@@ -63,16 +63,13 @@ function ObjectsPage() {
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-4xl tracking-tight">{heading}</h1>
-          <p className="mt-2 text-sm text-ink-soft">
-            {objects.length} {objects.length === 1 ? "object" : "objects"}
-          </p>
         </div>
         <button type="button" className="text-sm text-ink-soft" onClick={() => setShowType((value) => !value)}>
           {showType ? "Close" : "New type"}
         </button>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-4 flex gap-2 overflow-x-auto pb-1 md:hidden">
         <Filter to="/objects" search={{}} label="All" current={!typeKey} />
         <Filter to="/objects" search={{ type: "inbox" }} label="Inbox" current={typeKey === "inbox"} />
         {library.types

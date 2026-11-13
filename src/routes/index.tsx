@@ -78,55 +78,49 @@ function TodayPage() {
   const seen = new Set<string>();
 
   return (
-    <div className="rise mx-auto max-w-2xl px-5 py-6 md:py-10">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          aria-label="Previous day"
-          disabled={!dated}
-          className="grid size-11 place-items-center rounded-full border border-line disabled:opacity-40"
-          onClick={() => dated && void navigate({ to: "/", search: { day: shiftDay(iso, -1) } })}
-        >
-          <ChevronLeft className="size-5" />
-        </button>
-        <button
-          type="button"
-          className="text-sm text-ink-soft"
-          onClick={() => {
-            if (!dated || iso !== dayStamp()) {
-              setCalendarOpen(false);
-              void navigate({ to: "/", search: {} });
-              return;
-            }
-            setCalendarOpen((open) => !open);
-          }}
-        >
-          {!dated || iso === dayStamp() ? (calendarOpen ? "Hide month" : "Month") : "Jump to today"}
-        </button>
-        <button
-          type="button"
-          aria-label="Next day"
-          disabled={!dated}
-          className="grid size-11 place-items-center rounded-full border border-line disabled:opacity-40"
-          onClick={() => dated && void navigate({ to: "/", search: { day: shiftDay(iso, 1) } })}
-        >
-          <ChevronRight className="size-5" />
-        </button>
+    <div className="rise mx-auto max-w-2xl px-5 py-6 md:py-12">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm text-ink-soft">{dated ? format(parseDay(iso), "EEEE") : "Daily note"}</p>
+          <h1 className="mt-1 font-serif text-4xl tracking-tight text-balance">
+            {dated ? format(parseDay(iso), "d MMMM") : "Today"}
+          </h1>
+        </div>
+        <div className="flex items-center">
+          <button
+            type="button"
+            aria-label="Previous day"
+            disabled={!dated}
+            className="grid size-11 place-items-center rounded-full text-ink-soft disabled:opacity-40"
+            onClick={() => dated && void navigate({ to: "/", search: { day: shiftDay(iso, -1) } })}
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Next day"
+            disabled={!dated}
+            className="grid size-11 place-items-center rounded-full text-ink-soft disabled:opacity-40"
+            onClick={() => dated && void navigate({ to: "/", search: { day: shiftDay(iso, 1) } })}
+          >
+            <ChevronRight className="size-5" />
+          </button>
+        </div>
       </div>
-      {dated ? (
-        <p className="mt-8 text-sm font-medium tracking-wide text-ink-soft">{format(parseDay(iso), "EEEE")}</p>
-      ) : (
-        <p className="mt-8 text-sm font-medium tracking-wide text-ink-soft">Daily note</p>
-      )}
-      <h1 className="mt-1 font-serif text-4xl tracking-tight text-balance">
-        {dated ? format(parseDay(iso), "d MMMM yyyy") : "Today"}
-      </h1>
       {dated && (
-        <WeekStrip
-          iso={iso}
-          marks={notedDays}
-          onPick={(day) => void navigate({ to: "/", search: { day } })}
-        />
+        <WeekStrip iso={iso} marks={notedDays} onPick={(day) => void navigate({ to: "/", search: { day } })} />
+      )}
+      {dated && (
+        <div className="mt-2 flex gap-4 text-sm text-ink-soft">
+          {iso !== dayStamp() && (
+            <button type="button" onClick={() => void navigate({ to: "/", search: {} })}>
+              Today
+            </button>
+          )}
+          <button type="button" onClick={() => setCalendarOpen((open) => !open)}>
+            {calendarOpen ? "Hide month" : "Month"}
+          </button>
+        </div>
       )}
       {dated && calendarOpen && (
         <MonthGrid
@@ -138,93 +132,76 @@ function TodayPage() {
           }}
         />
       )}
-      <div className="mt-6">
+      <div className="mt-8">
         {daily ? (
           <BodyEditor
+            bare
             label="Daily note"
             value={daily.body}
             onChange={(body) => updateObject(daily.id, { body })}
             objects={visibleObjects(library).filter((object) => object.id !== daily.id)}
           />
         ) : (
-          <p className="text-sm text-ink-soft">This day has no note yet.</p>
+          <p className="text-sm text-ink-soft">Nothing written for this day.</p>
         )}
       </div>
-      {dueToday.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-sm font-medium text-ink-soft">Due today</h2>
-          <ul className="mt-3 divide-y divide-line">
+      {dueToday.length + meetings.length + checks.length + openTasks.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-sm text-ink-faint">
+            Open · {dueToday.length + meetings.length + checks.length + openTasks.length}
+          </h2>
+          <ul className="mt-2">
             {dueToday.map((task) => (
-              <li key={task.id} className="flex items-center gap-3 py-3">
+              <li key={task.id} className="flex items-center gap-3 py-2">
                 <input
                   type="checkbox"
                   aria-label={`Done: ${task.title}`}
                   className="size-4 accent-accent"
                   onChange={() => setProp(task.id, "done", true)}
                 />
-                <Link to="/o/$objectId" params={{ objectId: task.id }} className="font-serif text-lg">
+                <Link to="/o/$objectId" params={{ objectId: task.id }} className="min-w-0 truncate">
                   {task.title}
                 </Link>
+                <span className="ml-auto text-xs text-ink-faint">Due</span>
               </li>
             ))}
-          </ul>
-        </section>
-      )}
-      {meetings.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-sm font-medium text-ink-soft">Meetings</h2>
-          <ul className="mt-3 divide-y divide-line">
             {meetings.map((meeting) => (
-              <li key={meeting.id} className="py-3">
-                <Link to="/o/$objectId" params={{ objectId: meeting.id }} className="font-serif text-lg">
+              <li key={meeting.id} className="flex items-center gap-3 py-2">
+                <span className="size-4" />
+                <Link to="/o/$objectId" params={{ objectId: meeting.id }} className="min-w-0 truncate">
                   {meeting.title}
                 </Link>
+                <span className="ml-auto text-xs text-ink-faint">Meeting</span>
               </li>
             ))}
-          </ul>
-        </section>
-      )}
-      {checks.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-sm font-medium text-ink-soft">Checks in notes</h2>
-          <ul className="mt-3 divide-y divide-line">
             {checks.map((check) => {
               const source = library.objects.find((object) => object.id === check.objectId);
               return (
-                <li key={`${check.objectId}:${check.line}`} className="flex items-start gap-3 py-3">
+                <li key={`${check.objectId}:${check.line}`} className="flex items-center gap-3 py-2">
                   <input
                     type="checkbox"
                     aria-label={`Done: ${check.text}`}
-                    className="mt-1 size-4 accent-accent"
+                    className="size-4 accent-accent"
                     onChange={() => toggleCheck(check.objectId, check.line)}
                   />
-                  <span className="min-w-0">
-                    <span className="block">{check.text}</span>
-                    {source && (
-                      <Link to="/o/$objectId" params={{ objectId: source.id }} className="text-xs text-ink-faint">
-                        {source.title}
-                      </Link>
-                    )}
-                  </span>
+                  <span className="min-w-0 truncate">{check.text}</span>
+                  {source && (
+                    <Link to="/o/$objectId" params={{ objectId: source.id }} className="ml-auto shrink-0 text-xs text-ink-faint">
+                      {source.title}
+                    </Link>
+                  )}
                 </li>
               );
             })}
-          </ul>
-        </section>
-      )}
-      {openTasks.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-sm font-medium text-ink-soft">Open tasks</h2>
-          <ul className="mt-3 divide-y divide-line">
             {openTasks.map((task) => (
-              <li key={task.id} className="flex items-center gap-3 py-3">
+              <li key={task.id} className="flex items-center gap-3 py-2">
                 <input
                   type="checkbox"
                   aria-label={`Done: ${task.title}`}
                   className="size-4 accent-accent"
                   onChange={() => setProp(task.id, "done", true)}
                 />
-                <Link to="/o/$objectId" params={{ objectId: task.id }} className="font-serif text-lg">
+                <Link to="/o/$objectId" params={{ objectId: task.id }} className="min-w-0 truncate">
                   {task.title}
                 </Link>
               </li>
@@ -233,34 +210,31 @@ function TodayPage() {
         </section>
       )}
       {revisit && (
-        <section className="mt-8 rounded-2xl border border-line px-4 py-3">
-          <h2 className="text-sm font-medium text-ink-soft">Revisit</h2>
-          <Link to="/o/$objectId" params={{ objectId: revisit.id }} className="mt-1 block font-serif text-lg">
+        <p className="mt-8 text-sm text-ink-soft">
+          Revisit{" "}
+          <Link to="/o/$objectId" params={{ objectId: revisit.id }} className="text-ink">
             {revisit.title}
           </Link>
-          <p className="text-sm text-ink-faint">A note from the rest of your library, different each day.</p>
+        </p>
+      )}
+      {connected.some(Boolean) && (
+        <section className="mt-8">
+          <h2 className="text-sm text-ink-faint">Linked</h2>
+          <ul className="mt-2">
+            {connected.map((object) => {
+              if (!object || seen.has(object.id)) return null;
+              seen.add(object.id);
+              return (
+                <li key={object.id} className="py-1.5">
+                  <Link to="/o/$objectId" params={{ objectId: object.id }}>
+                    {object.title}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       )}
-      <section className="mt-8">
-        <h2 className="text-sm font-medium text-ink-soft">Connected</h2>
-        <ul className="mt-3 divide-y divide-line">
-          {connected.length === 0 && <li className="py-3 text-sm text-ink-faint">Link something with [[double brackets]].</li>}
-          {connected.map((object) => {
-            if (!object || seen.has(object.id)) return null;
-            seen.add(object.id);
-            return (
-              <li key={object.id} className="py-3">
-                <Link to="/o/$objectId" params={{ objectId: object.id }} className="font-serif text-lg">
-                  {object.title}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-      <Link to="/ask" className="mt-8 inline-block text-sm text-ink">
-        Ask your notes
-      </Link>
     </div>
   );
 }
@@ -291,7 +265,7 @@ function WeekStrip({
             key={day}
             type="button"
             onClick={() => onPick(day)}
-            className={`flex flex-col items-center rounded-xl py-2 text-xs ${selected ? "bg-ink text-paper" : "text-ink-soft"}`}
+            className={`flex min-h-11 flex-col items-center justify-center rounded-xl py-1 text-xs ${selected ? "bg-ink text-paper" : "text-ink-soft"}`}
           >
             <span>{format(date, "EEEEE")}</span>
             <span className="mt-1 text-sm">{format(date, "d")}</span>

@@ -75,6 +75,12 @@
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 
+@media (min-width: 768px) {
+  .pb-nav {
+    padding-bottom: 2.5rem;
+  }
+}
+
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -119,6 +125,14 @@
     opacity: 1;
     transform: none;
   }
+}
+
+summary.menu-sum {
+  list-style: none;
+}
+
+summary.menu-sum::-webkit-details-marker {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { MoreHorizontal, Pin } from "lucide-react";
 import { liveLinks, typeById, useBodhi, visibleObjects } from "@/lib/bodhi/store";
 import { unlinkedMentions } from "@/lib/bodhi/mentions";
 import type { PropDef, PropValue } from "@/lib/bodhi/types";
 import { TYPE_IDS } from "@/lib/bodhi/types";
 import { BodyEditor } from "@/components/bodhi/body-editor";
-import { TYPE_DOT, TypeIcon } from "@/components/bodhi/icons";
+import { TYPE_DOT } from "@/components/bodhi/icons";
 import { cn } from "@/lib/cn";
 
 export function ObjectView({ objectId }: { objectId: string }) {
@@ -59,30 +60,106 @@ export function ObjectView({ objectId }: { objectId: string }) {
   }
 
   return (
-    <article className="rise mx-auto max-w-2xl px-5 py-6 md:py-10">
-      <Link to="/objects" search={{ type: type.key }} className="text-sm text-ink-soft">
-        {type.plural}
-      </Link>
-      <div className="mt-3 flex items-center gap-2 text-sm text-ink-soft">
-        <span className={cn("size-2 rounded-full", TYPE_DOT[type.color])} />
-        <TypeIcon name={type.icon} className="size-4" />
-        {type.name}
-        {object.inbox && <span className="rounded-full bg-paper-2 px-2 py-0.5 text-xs">Inbox</span>}
-        {object.pinned && <span className="rounded-full bg-paper-2 px-2 py-0.5 text-xs">Pinned</span>}
+    <article className="rise mx-auto max-w-2xl px-5 py-6 md:py-12">
+      <div className="flex items-center justify-between gap-3">
+        <Link to="/objects" search={{ type: type.key }} className="flex items-center gap-2 text-sm text-ink-soft">
+          <span className={cn("size-2 rounded-full", TYPE_DOT[type.color])} />
+          {type.name}
+          {object.inbox ? " · Inbox" : ""}
+        </Link>
+        <div className="flex items-center">
+          {type.id !== TYPE_IDS.daily && (
+            <button
+              type="button"
+              aria-label={object.pinned ? "Unpin" : "Pin"}
+              aria-pressed={!!object.pinned}
+              className={cn("grid size-11 place-items-center rounded-full", object.pinned ? "text-ink" : "text-ink-faint")}
+              onClick={() => updateObject(object.id, { pinned: !object.pinned })}
+            >
+              <Pin className="size-4" />
+            </button>
+          )}
+          <details className="relative">
+            <summary className="menu-sum grid size-11 place-items-center rounded-full text-ink-soft" aria-label="More actions">
+              <MoreHorizontal className="size-5" />
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 w-56 rounded-2xl border border-line bg-paper p-1 shadow-panel">
+              <MenuButton
+                label={copied ? "Copied" : "Copy Markdown"}
+                onClick={() => {
+                  const markdown = `# ${object.title}\n\n${object.body}`;
+                  void navigator.clipboard.writeText(markdown).then(() => {
+                    setCopied(true);
+                    window.setTimeout(() => setCopied(false), 1600);
+                  });
+                }}
+              />
+              {type.id !== TYPE_IDS.daily && (
+                <MenuButton label="Use as template" onClick={() => setTemplate(type.id, object.body)} />
+              )}
+              {type.id !== TYPE_IDS.daily && (
+                <MenuButton
+                  label="Duplicate"
+                  onClick={() => {
+                    const copyId = duplicateObject(object.id);
+                    void navigate({ to: "/o/$objectId", params: { objectId: copyId } });
+                  }}
+                />
+              )}
+              {object.inbox && <MenuButton label="File from inbox" onClick={() => updateObject(object.id, { inbox: false })} />}
+              <MenuButton
+                label={object.archived ? "Unarchive" : "Archive"}
+                onClick={() => updateObject(object.id, { archived: !object.archived })}
+              />
+              {type.id !== TYPE_IDS.daily &&
+                (confirm ? (
+                  <MenuButton
+                    label="Confirm delete"
+                    danger
+                    onClick={() => {
+                      deleteObject(object.id);
+                      void navigate({ to: "/objects" });
+                    }}
+                  />
+                ) : (
+                  <MenuButton label="Delete" onClick={() => setConfirm(true)} />
+                ))}
+              {type.id !== TYPE_IDS.daily && (
+                <label className="mt-1 flex items-center justify-between gap-2 border-t border-line px-3 py-2 text-sm">
+                  Type
+                  <select
+                    value={type.id}
+                    aria-label="Object type"
+                    className="bg-transparent text-ink outline-none"
+                    onChange={(event) => moveType(object.id, event.target.value)}
+                  >
+                    {library.types
+                      .filter((item) => item.id !== TYPE_IDS.daily)
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              )}
+            </div>
+          </details>
+        </div>
       </div>
       {type.id === TYPE_IDS.daily ? (
-        <h1 className="mt-3 font-serif text-4xl tracking-tight text-balance">{object.title}</h1>
+        <h1 className="mt-4 font-serif text-4xl tracking-tight text-balance">{object.title}</h1>
       ) : (
         <input
           value={object.title}
           onChange={(event) => updateObject(object.id, { title: event.target.value })}
           aria-label="Title"
-          className="mt-3 w-full bg-transparent font-serif text-4xl tracking-tight text-ink outline-none"
+          className="mt-4 w-full bg-transparent font-serif text-4xl tracking-tight text-ink outline-none"
         />
       )}
 
       {type.properties.length > 0 && (
-        <dl className="mt-6 divide-y divide-line rounded-2xl border border-line">
+        <dl className="mt-6 divide-y divide-line">
           {type.properties.map((property) => (
             <div key={property.id} className="grid gap-2 px-3 py-3 sm:grid-cols-[8rem_1fr] sm:items-center">
               <dt className="text-sm text-ink-soft">{property.name}</dt>
@@ -100,6 +177,8 @@ export function ObjectView({ objectId }: { objectId: string }) {
 
       <div className="mt-6">
         <BodyEditor
+          bare
+          label="Writing"
           value={object.body}
           onChange={(body) => updateObject(object.id, { body })}
           objects={visibleObjects(library).filter((item) => item.id !== object.id)}
@@ -108,7 +187,7 @@ export function ObjectView({ objectId }: { objectId: string }) {
 
       {unlinked.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-sm font-medium text-ink-soft">Mentioned, not linked</h2>
+          <h2 className="text-sm text-ink-faint">Also named here</h2>
           <ul className="mt-2 flex flex-wrap gap-2">
             {unlinked.map((item) => (
               <li key={item.id}>
@@ -127,8 +206,8 @@ export function ObjectView({ objectId }: { objectId: string }) {
 
       <section className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-ink-soft">Connections</h2>
-          <button type="button" className="text-sm text-ink" onClick={() => setShowConnect((value) => !value)}>
+          <h2 className="text-sm text-ink-faint">Linked</h2>
+          <button type="button" className="text-sm text-ink-soft" onClick={() => setShowConnect((value) => !value)}>
             {showConnect ? "Close" : "Connect"}
           </button>
         </div>
@@ -159,22 +238,18 @@ export function ObjectView({ objectId }: { objectId: string }) {
             </ul>
           </div>
         )}
-        <ul className="mt-3 divide-y divide-line">
-          {related.length === 0 && <li className="py-3 text-sm text-ink-soft">No connections yet.</li>}
+        <ul className="mt-2">
+          {related.length === 0 && <li className="py-2 text-sm text-ink-faint">Nothing linked yet.</li>}
           {related.map((link) => {
             const otherId = link.fromId === object.id ? link.toId : link.fromId;
             const other = library.objects.find((item) => item.id === otherId && !item.deletedAt);
             if (!other) return null;
-            const incoming = link.toId === object.id;
             return (
-              <li key={link.id} className="flex items-center gap-3 py-3">
-                <div className="min-w-0 flex-1">
-                  <Link to="/o/$objectId" params={{ objectId: other.id }} className="font-serif text-lg">
-                    {other.title}
-                  </Link>
-                  <p className="text-xs text-ink-faint">{incoming ? "Links here" : "Linked"} · {link.kind}</p>
-                </div>
-                <button type="button" className="text-sm text-ink-soft" onClick={() => disconnect(link.id)}>
+              <li key={link.id} className="flex items-center gap-3 py-1.5">
+                <Link to="/o/$objectId" params={{ objectId: other.id }} className="min-w-0 flex-1 truncate">
+                  {other.title}
+                </Link>
+                <button type="button" className="text-sm text-ink-faint" onClick={() => disconnect(link.id)}>
                   Remove
                 </button>
               </li>
@@ -184,13 +259,13 @@ export function ObjectView({ objectId }: { objectId: string }) {
       </section>
 
       {type.id !== TYPE_IDS.daily && (
-        <section className="mt-8 rounded-2xl border border-line p-3">
-          <h2 className="text-sm font-medium text-ink-soft">Add a property to {type.plural}</h2>
+        <details className="mt-10">
+          <summary className="menu-sum cursor-pointer text-sm text-ink-soft">Add a property</summary>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <input
               value={propName}
               onChange={(event) => setPropName(event.target.value)}
-              placeholder="Property name"
+              placeholder="Name"
               className="flex-1 rounded-xl border border-line bg-paper-2 px-3 py-2 text-sm outline-none"
             />
             <select
@@ -219,101 +294,21 @@ export function ObjectView({ objectId }: { objectId: string }) {
               Add
             </button>
           </div>
-        </section>
+        </details>
       )}
-
-      <div className="mt-8 flex flex-wrap gap-2">
-        <button
-          type="button"
-          className="rounded-full border border-line px-4 py-2 text-sm"
-          onClick={() => updateObject(object.id, { pinned: !object.pinned })}
-        >
-          {object.pinned ? "Unpin" : "Pin"}
-        </button>
-        <button
-          type="button"
-          className="rounded-full border border-line px-4 py-2 text-sm"
-          onClick={() => {
-            const markdown = `# ${object.title}\n\n${object.body}`;
-            void navigator.clipboard.writeText(markdown).then(() => {
-              setCopied(true);
-              window.setTimeout(() => setCopied(false), 1600);
-            });
-          }}
-        >
-          {copied ? "Copied" : "Copy Markdown"}
-        </button>
-        {type.id !== TYPE_IDS.daily && (
-          <button type="button" className="rounded-full border border-line px-4 py-2 text-sm" onClick={() => setTemplate(type.id, object.body)}>
-            Use writing as template
-          </button>
-        )}
-        {type.id !== TYPE_IDS.daily && (
-          <button
-            type="button"
-            className="rounded-full border border-line px-4 py-2 text-sm"
-            onClick={() => {
-              const copyId = duplicateObject(object.id);
-              void navigate({ to: "/o/$objectId", params: { objectId: copyId } });
-            }}
-          >
-            Duplicate
-          </button>
-        )}
-        {type.id !== TYPE_IDS.daily && (
-          <label className="flex items-center gap-2 rounded-full border border-line px-3 py-2 text-sm">
-            Type
-            <select
-              value={type.id}
-              aria-label="Object type"
-              className="bg-transparent outline-none"
-              onChange={(event) => moveType(object.id, event.target.value)}
-            >
-              {library.types
-                .filter((item) => item.id !== TYPE_IDS.daily)
-                .map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-        )}
-        {object.inbox && (
-          <button
-            type="button"
-            className="rounded-full border border-line px-4 py-2 text-sm"
-            onClick={() => updateObject(object.id, { inbox: false })}
-          >
-            File from inbox
-          </button>
-        )}
-        <button
-          type="button"
-          className="rounded-full border border-line px-4 py-2 text-sm"
-          onClick={() => updateObject(object.id, { archived: !object.archived })}
-        >
-          {object.archived ? "Unarchive" : "Archive"}
-        </button>
-        {type.id !== TYPE_IDS.daily &&
-          (confirm ? (
-            <button
-              type="button"
-              className="rounded-full bg-type-wine px-4 py-2 text-sm text-paper"
-              onClick={() => {
-                deleteObject(object.id);
-                void navigate({ to: "/objects" });
-              }}
-            >
-              Confirm delete
-            </button>
-          ) : (
-            <button type="button" className="rounded-full border border-line px-4 py-2 text-sm" onClick={() => setConfirm(true)}>
-              Delete
-            </button>
-          ))}
-      </div>
     </article>
+  );
+}
+
+function MenuButton({ label, onClick, danger = false }: { label: string; onClick: () => void; danger?: boolean }) {
+  return (
+    <button
+      type="button"
+      className={cn("flex w-full rounded-xl px-3 py-2 text-left text-sm", danger ? "text-type-wine" : "text-ink")}
+      onClick={onClick}
+    >
+      {label}
+    </button>
   );
 }
 
